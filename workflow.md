@@ -2,184 +2,665 @@
 
 ## 1. Project Overview
 
-YantraAI is a secure, on-premise AI workbench designed to process confidential documents and provide intelligent assistance without sending sensitive data to external cloud services.
+YantraAI is a secure, local-first AI workbench designed to process confidential documents and provide intelligent assistance without unnecessarily sending sensitive data to external cloud AI services.
 
-The system will combine:
+The final system will combine:
 
-* Local LLMs
-* RAG (Retrieval-Augmented Generation)
-* Agentic workflows
-* Multimodal AI
-* Document processing
-* Python/Excel tools
-* File generation
-* Multiple specialized AI models
+- Local LLMs
+- RAG (Retrieval-Augmented Generation)
+- Conversation memory
+- Agentic workflows
+- Multimodal AI
+- Document processing
+- Python / data-analysis tools
+- Excel tools
+- File generation
+- Multiple specialized AI models
+- A unified user interface
 
-The final system should allow a user to ask questions, analyze documents, execute tools, and generate useful outputs through a single interface.
+The main objective is:
+
+> Build a modular, local-first, agentic AI system where the user interacts with one interface while YantraAI automatically decides whether to use RAG, an LLM, a vision model, or a tool.
 
 ---
 
-# 2. Overall Architecture
+# 2. Current Project Status
+
+YantraAI currently has a **functional local RAG foundation**.
+
+The following components are already implemented and tested:
+
+- PDF ingestion
+- PDF text extraction
+- Page-wise processing
+- Section detection
+- Text chunking
+- Local embeddings
+- ChromaDB vector storage
+- Semantic retrieval
+- Distance-based filtering
+- Basic section-aware retrieval
+- RAG prompt construction
+- Local Qwen LLM generation
+- Conversation memory
+- Follow-up question handling
+- Source metadata
+- Source display
+- Basic hallucination prevention
+
+The current system is still a **RAG prototype** and has not yet been converted into the final FastAPI + LangGraph architecture.
+
+---
+
+# 3. Current Implemented Architecture
+
+The currently working architecture is:
 
 ```text
-                         USER
-                           │
-                           ▼
-                  ┌────────────────┐
-                  │    FRONTEND    │
-                  │ React / Next.js│
-                  └───────┬────────┘
-                          │
-                          ▼
-                  ┌────────────────┐
-                  │    FastAPI     │
-                  │    BACKEND     │
-                  └───────┬────────┘
-                          │
-                          ▼
-              ┌────────────────────────┐
-              │    AGENT ORCHESTRATOR  │
-              │       LangGraph        │
-              └───────────┬────────────┘
-                          │
-          ┌───────────────┼────────────────┐
-          │               │                │
-          ▼               ▼                ▼
-   ┌────────────┐   ┌────────────┐   ┌────────────┐
-   │MODEL ROUTER│   │ RAG ENGINE │   │ TOOL ENGINE│
-   └─────┬──────┘   └─────┬──────┘   └─────┬──────┘
-         │                 │                │
-    ┌────┼────┐            ▼          ┌─────┼─────┐
-    ▼    ▼    ▼       Vector DB       ▼     ▼     ▼
-   LLM  LLM Vision      Chroma       File  Python Excel
-                                      Tool   Tool  Tool
-         │                 │
-         └────────┬────────┘
-                  ▼
-           FINAL RESPONSE
-                  │
-        ┌─────────┼─────────┐
-        ▼         ▼         ▼
-      DOCX       XLSX      PPTX
-```
+                    USER
+                      │
+                      ▼
+              Interactive RAG
+                      │
+                      ▼
+              Query Processing
+                      │
+                      ▼
+             Section Detection
+                      │
+                      ▼
+            Query Embedding
+                      │
+                      ▼
+                ChromaDB
+                      │
+                      ▼
+             Relevant Chunks
+                      │
+                      ▼
+             Context Construction
+                      │
+                      ▼
+                 RAG Prompt
+                      │
+                      ▼
+                Qwen LLM
+                      │
+                      ▼
+              Answer + Sources
 
----
+This architecture is currently implemented as a Python-based local application.
 
-# 3. CURRENT STATUS
+4. Document Processing
+4.1 PDF Ingestion
 
-## Already Implemented
+Status:
 
-The basic RAG system is currently working.
+✅ Completed
 
-### Document Processing
+PDF documents can be placed inside:
 
-* PDF files can be placed inside `documents/`
-* PDFs are automatically detected
-* PDF text is extracted using PyMuPDF
-* Documents are processed page-by-page
-* Sections can be detected
-* Large text is divided into chunks
+documents/
 
-### Embeddings
+The system automatically processes available PDF documents.
+
+4.2 Text Extraction
+
+Status:
+
+✅ Completed
+
+PyMuPDF is currently used for PDF text extraction.
+
+The extraction process works page-by-page.
+
+Basic flow:
+
+PDF
+ │
+ ▼
+PyMuPDF
+ │
+ ▼
+Page-wise Text
+4.3 Section Detection
+
+Status:
+
+✅ Implemented
+🟡 Needs improvement
+
+The system currently attempts to identify document sections using section/header information and keyword-based logic.
+
+This allows retrieval to consider the likely relevant section when processing a question.
+
+Current limitation:
+
+Keyword-based section detection
+        ↓
+May sometimes select an incorrect section
+
+Future improvement:
+
+Better heading detection
+Document structure awareness
+Semantic section matching
+Improved query-to-section mapping
+5. Text Chunking
+
+Status:
+
+✅ Implemented
+🟡 Needs improvement
+
+Large document text is divided into smaller chunks before embedding.
+
+Current chunking is primarily word/text based.
+
+Current flow:
+
+Large Document Text
+        │
+        ▼
+Chunking
+        │
+        ▼
+Smaller Text Chunks
+        │
+        ▼
+Embedding
+
+Future improvements:
+
+Better chunk size
+Chunk overlap optimization
+Semantic chunking
+Document-aware chunking
+Section-aware chunking
+Better handling of tables and structured content
+6. Embedding System
+
+Status:
+
+✅ Completed
 
 Current embedding model:
 
-```text
 nomic-embed-text
-```
-
-Embedding dimension:
-
-```text
-768
-```
 
 The embedding model runs locally through Ollama.
 
-### Vector Database
+Current embedding dimension:
+
+768
+
+The embedding process is:
+
+Document Chunk
+      │
+      ▼
+nomic-embed-text
+      │
+      ▼
+768-dimensional Vector
+
+The same embedding model is currently used for query embedding.
+
+7. Vector Database
+
+Status:
+
+✅ Completed
 
 Current vector database:
 
-```text
 ChromaDB
-```
 
 Current collection:
 
-```text
 yantra_documents
-```
 
-Metadata stored with chunks includes:
+The vector database stores document chunks together with metadata.
 
-```text
+Current metadata includes:
+
 filename
 page
 section
 chunk
-```
 
-### Retrieval
+Basic architecture:
 
-The system currently:
+Text Chunk
+    │
+    ▼
+Embedding
+    │
+    ▼
+ChromaDB
+    │
+    ├── Vector
+    └── Metadata
+8. Current Retrieval System
 
-1. Receives a user question
-2. Creates an embedding
-3. Searches ChromaDB
-4. Retrieves relevant chunks
-5. Applies distance threshold
-6. Uses section detection when possible
-7. Builds document context
+Status:
 
-### LLM
+✅ Functional
+🟡 Needs optimization
+
+Current retrieval flow:
+
+User Question
+      │
+      ▼
+Section Detection
+      │
+      ▼
+Question Embedding
+      │
+      ▼
+ChromaDB Search
+      │
+      ▼
+Retrieved Candidates
+      │
+      ▼
+Distance Filtering
+      │
+      ▼
+Relevant Chunks
+      │
+      ▼
+Context Construction
+
+The system uses semantic similarity to retrieve relevant document chunks.
+
+A distance/relevance threshold is also used to prevent obviously irrelevant chunks from being passed to the LLM.
+
+9. Current RAG Generation
+
+Status:
+
+✅ Completed
+
+After retrieval, the relevant chunks are inserted into the RAG prompt.
+
+Current flow:
+
+User Question
+      │
+      ▼
+Retrieved Context
+      │
+      ▼
+RAG Prompt
+      │
+      ▼
+Qwen3:1.7b
+      │
+      ▼
+Answer
 
 Current generation model:
 
-```text
 qwen3:1.7b
-```
 
-The model receives the retrieved document context and generates the answer.
+The LLM is instructed to answer using the retrieved document context.
 
-### Conversation Memory
+10. Conversation Memory
 
-The system stores recent:
+Status:
 
-```text
-User question
-Assistant answer
-```
+✅ Completed
 
-This allows follow-up questions such as:
+YantraAI currently maintains recent conversation context.
 
-```text
-User: What algorithms are included?
+Stored information includes:
 
-User: What about the unsupervised ones?
-```
+User Question
+Assistant Answer
 
-The previous conversation can help resolve references.
+This allows follow-up questions.
 
-### Source Information
+Example:
 
-The RAG response currently shows:
+User:
+What algorithms are included?
 
-```text
+Assistant:
+The document includes supervised and unsupervised algorithms...
+
+User:
+What about the unsupervised ones?
+
+Assistant:
+...
+
+The previous conversation can help resolve references and incomplete follow-up questions.
+
+Conversation memory is considered an important part of the final YantraAI architecture and should be retained during future RAG and agent development.
+
+11. Source Information
+
+Status:
+
+✅ Completed
+
+The RAG response currently provides source-related information such as:
+
 Source
 Page
 Section
 Chunk
 Distance
-```
 
-This provides basic traceability for answers.
+This provides basic traceability between the generated answer and the original document.
 
----
+Future frontend implementation should convert this into a cleaner source/citation interface.
 
-# 4. CURRENT PROJECT STRUCTURE
+12. Hallucination Control
 
-```text
+Status:
+
+✅ Basic implementation completed
+
+YantraAI is designed to avoid freely generating information when the required information is not present in the retrieved document context.
+
+For example:
+
+User:
+What is quantum computing?
+
+If the relevant information is not sufficiently available in the indexed document, the system should respond with something similar to:
+
+I could not find this information in the document.
+
+This establishes an important RAG principle:
+
+Insufficient Evidence
+        ↓
+Do Not Freely Invent
+        ↓
+Return "Not Found in Document"
+
+Future improvements will make this grounding mechanism more reliable.
+
+13. Current RAG Testing
+
+The current RAG system has been tested with questions including:
+
+What is supervised learning?
+
+What topics are covered in AI?
+
+What are 1NF, 2NF and 3NF?
+
+What is a functional dependency?
+
+Explain normalization in DBMS.
+
+What is logistic regression?
+
+What is PCA?
+
+What is quantum computing?
+
+Testing has been used to verify:
+
+Retrieval quality
+Document grounding
+Section detection
+Answer generation
+Source information
+Follow-up questions
+Out-of-context questions
+14. Current RAG Limitations
+
+Although the RAG system is functional, several improvements are still required.
+
+14.1 Retrieval Quality
+
+Status:
+
+🟡 Needs improvement
+
+Some questions retrieve a broad/general section instead of the exact relevant chunk.
+
+Example:
+
+Question:
+What is PCA?
+
+Possible problem:
+
+Machine Learning Section
+        ↓
+Retrieved
+        ↓
+Exact PCA explanation
+        ↓
+Not always retrieved
+
+The goal is:
+
+Question
+   ↓
+Exact relevant chunk
+   ↓
+Correct context
+   ↓
+Correct answer
+14.2 Section Detection
+
+Status:
+
+🟡 Needs improvement
+
+Current section detection is partly keyword-based.
+
+This can cause incorrect section selection for ambiguous questions.
+
+Future improvements:
+
+Semantic section matching
+Better heading extraction
+Section embeddings
+Query-section relevance scoring
+14.3 Chunking
+
+Status:
+
+🟡 Needs improvement
+
+Current chunking works but is not yet optimized for all document structures.
+
+Future improvements:
+
+Semantic chunking
+Section-aware chunking
+Better overlap
+Table-aware processing
+Document-specific chunking strategies
+14.4 Reranking
+
+Status:
+
+🟡 Partially implemented
+
+A reranker component exists in the project but is not yet fully integrated into the complete retrieval pipeline.
+
+Target:
+
+Vector Search
+      │
+      ▼
+Top-K Candidates
+      │
+      ▼
+Reranker
+      │
+      ▼
+Top Relevant Chunks
+      │
+      ▼
+LLM
+15. Improved Target RAG Pipeline
+
+The next version of the RAG pipeline should become:
+
+User Question
+      │
+      ▼
+Query Understanding
+      │
+      ▼
+Conversation Context
+      │
+      ▼
+Query Rewriting
+      │
+      ▼
+Query Embedding
+      │
+      ▼
+Vector Search
+      │
+      ▼
+Top-K Candidates
+      │
+      ▼
+Reranking
+      │
+      ▼
+Relevance Filtering
+      │
+      ▼
+Relevant Context
+      │
+      ▼
+RAG Prompt
+      │
+      ▼
+Local LLM
+      │
+      ▼
+Answer + Sources
+
+The major improvement is:
+
+Vector Search
+      ↓
+Reranker
+      ↓
+Relevant Context
+      ↓
+LLM
+
+instead of directly sending the first retrieved chunks to the LLM.
+
+16. Query Understanding & Rewriting
+
+Status:
+
+⬜ Future implementation
+
+Before retrieval, YantraAI should understand what the user is asking.
+
+Target flow:
+
+User Query
+    │
+    ▼
+Query Understanding
+    │
+    ▼
+Conversation Context
+    │
+    ▼
+Query Rewriting
+    │
+    ▼
+Search Query
+
+This becomes particularly important for follow-up questions.
+
+Example:
+
+User:
+What algorithms are discussed?
+
+User:
+Which of them are unsupervised?
+
+The second question can be transformed internally into something more explicit such as:
+
+Which algorithms discussed in the current document are unsupervised?
+
+The original conversation should still remain available to the system.
+
+17. Hybrid Retrieval
+
+Status:
+
+⬜ Optional future improvement
+
+If semantic retrieval alone is not sufficient, YantraAI can introduce hybrid retrieval.
+
+Possible architecture:
+
+                User Query
+                    │
+          ┌─────────┴─────────┐
+          ▼                   ▼
+   Semantic Search       Keyword Search
+          │                   │
+          └─────────┬─────────┘
+                    ▼
+              Combined Results
+                    │
+                    ▼
+                Reranker
+                    │
+                    ▼
+             Relevant Context
+
+Hybrid retrieval should only be added if evaluation shows that it improves retrieval quality.
+
+18. Retrieval Evaluation
+
+Status:
+
+⬜ Future implementation
+
+Retrieval should eventually be evaluated using a fixed test set.
+
+Evaluation should measure:
+
+Question
+   ↓
+Retrieved Chunks
+   ↓
+Was the correct chunk retrieved?
+
+Important metrics can include:
+
+Top-K retrieval accuracy
+Recall
+Precision
+Reranker improvement
+Relevance score
+Answer grounding
+Hallucination rate
+Response latency
+
+The purpose is to make RAG improvements measurable instead of relying only on manual testing.
+
+19. Current Project Structure
+
+Current project structure:
+
 YantraAI/
+
 │
 ├── documents/
 │   ├── dbms_comprehensive_notes.pdf
@@ -202,594 +683,433 @@ YantraAI/
 │
 ├── README.md
 └── workflow.md
-```
 
----
-
-# 5. CURRENT RAG FLOW
-
-```text
-PDF
- │
- ▼
-PyMuPDF
- │
- ▼
-Text Extraction
- │
- ▼
-Section Detection
- │
- ▼
-Text Chunking
- │
- ▼
-nomic-embed-text
- │
- ▼
-768-dimensional Embedding
- │
- ▼
-ChromaDB
-```
-
-When the user asks a question:
-
-```text
-User Question
-     │
-     ▼
-Section Detection
-     │
-     ▼
-Question Embedding
-     │
-     ▼
-ChromaDB Search
-     │
-     ▼
-Relevant Chunks
-     │
-     ▼
-Context Construction
-     │
-     ▼
-RAG Prompt
-     │
-     ▼
-Qwen
-     │
-     ▼
-Answer + Sources
-```
-
----
-
-# 6. CURRENT RAG TESTING
-
-The system has already been tested with questions such as:
-
-```text
-What is supervised learning?
-
-What topics are covered in AI?
-
-What are 1NF, 2NF and 3NF?
-
-What is a functional dependency?
-
-Explain normalization in DBMS.
-
-What is logistic regression?
-
-What is PCA?
-
-What is quantum computing?
-```
-
-The system correctly demonstrates an important RAG property:
-
-If information is not sufficiently available in the retrieved document context, it should respond:
-
-```text
-I could not find this information in the document.
-```
-
-This prevents the LLM from freely inventing answers.
-
----
-
-# 7. CURRENT LIMITATIONS
-
-The current system is a working RAG prototype, but it is not yet the final YantraAI architecture.
-
-Main limitations:
-
-### 1. Retrieval Quality
-
-Some questions retrieve a general section instead of the exact relevant chunk.
-
-Example:
-
-```text
-"What is PCA?"
-```
-
-may retrieve the Machine Learning section but fail to retrieve the exact PCA content.
-
-### 2. Section Detection
-
-Keyword-based section detection is currently being used.
-
-This can sometimes incorrectly assign a question to a section.
-
-### 3. Chunking
-
-Current chunking is primarily word-based.
-
-Better semantic/document-aware chunking will be required.
-
-### 4. Reranking
-
-A reranker exists in the project but needs to be properly integrated into the complete retrieval pipeline.
-
-### 5. Single-Process Architecture
-
-Currently the system is mainly a Python terminal application.
-
-It needs to become:
-
-```text
-Frontend
-    ↓
-FastAPI
-    ↓
-Agent
-    ↓
-RAG / Models / Tools
-```
-
-### 6. No Central Multi-Device Architecture Yet
-
-Models currently run locally on individual machines.
-
-The team needs to expose selected services through APIs so machines can communicate remotely.
-
----
-
-# 8. TARGET RAG PIPELINE
-
-The improved RAG pipeline should become:
-
-```text
-User Question
-      │
-      ▼
-Query Understanding
-      │
-      ▼
-Query Rewriting
-      │
-      ▼
-Embedding
-      │
-      ▼
-Vector Search
-      │
-      ▼
-Top-K Candidates
-      │
-      ▼
-Reranking
-      │
-      ▼
-Relevant Context
-      │
-      ▼
-LLM
-      │
-      ▼
-Answer + Sources
-```
-
-The important improvement is:
-
-```text
-Vector Search
-      ↓
-Reranker
-      ↓
-LLM
-```
-
-instead of directly sending the first retrieved chunks to the LLM.
-
----
-
-# 9. FUTURE AGENT ARCHITECTURE
-
-LangGraph will become the main orchestrator.
-
-Possible flow:
-
-```text
-                    USER QUERY
-                        │
-                        ▼
-                 QUERY ANALYZER
-                        │
-                        ▼
-                 ROUTING DECISION
-                        │
-       ┌────────────────┼────────────────┐
-       │                │                │
-       ▼                ▼                ▼
-      RAG            TOOL USE         GENERAL LLM
-       │                │                │
-       ▼                ▼                ▼
- Document Search    Python/Excel      Local Model
-       │            File Operations
-       │                │
-       └────────────────┼────────────────┘
-                        ▼
-                 RESPONSE GENERATOR
-                        │
-                        ▼
-                    USER
-```
-
----
-
-# 10. MODEL ROUTER
-
-Instead of using one model for everything, YantraAI should route tasks to suitable local models.
-
-Example:
-
-```text
-General reasoning
-        ↓
-General LLM
-
-Document question
-        ↓
-RAG + LLM
-
-Image understanding
-        ↓
-Vision model
-
-Coding / Python
-        ↓
-Coding model
-
-Large complex task
-        ↓
-Stronger model
-```
-
-The exact models will be finalized after testing available hardware.
-
-Priority:
-
-```text
-Accuracy
-    >
-Memory requirement
-    >
-Speed
-```
-
-For the prototype, lightweight models should be preferred if they provide acceptable quality.
-
----
-
-# 11. MULTI-LAPTOP DEPLOYMENT
-
-The team members are working from different locations.
-
-Therefore, the system should NOT depend on all laptops being physically connected to the same LAN.
-
-Instead:
-
-```text
-Laptop A
-   │
-   │ API
-   ▼
-Internet / Secure Network
-   │
-   ├──────────────► Laptop B
-   │
-   ├──────────────► Laptop C
-   │
-   └──────────────► Laptop D
-```
-
-Each laptop can run one service/model.
-
-Example:
-
-```text
-Machine 1 → Main backend / RAG
-Machine 2 → LLM service
-Machine 3 → Vision model
-Machine 4 → Tools / processing
-```
-
-Communication should happen through APIs.
-
-For development/testing, tools such as a secure tunnel or VPN can be used.
-
-The final production architecture should use proper authentication and secure networking.
-
----
-
-# 12. HARDWARE STRATEGY
-
-Current available systems include machines with approximately:
-
-```text
-Machine A:
-Intel i5-1235U
-16 GB RAM
-Intel Iris Xe
-
-Machine B:
-Apple M1
-8 GB RAM
-
-Machine C:
-Intel i5 11th Gen
-8 GB RAM
-NVIDIA MX350 2 GB
-
-Machine D:
-Intel Core Ultra 5 125H
-24 GB RAM
-Integrated Intel Graphics
-
-Machine E:
-Intel i5 8th Gen
-8 GB RAM
-```
-
-Anish's machine should currently be excluded because it is not available.
-
-The final model distribution should be decided after benchmarking:
-
-```text
-RAM usage
-Model size
-Inference speed
-CPU/GPU utilization
-Response latency
-Concurrent requests
-```
-
-Do NOT download large models on every machine unnecessarily.
-
----
-
-# 13. TEAM DEVELOPMENT PLAN
-
-## Phase 1 — RAG Core
+This is the current prototype structure.
+
+As the project grows, the codebase should gradually be modularized.
+
+20. Target Project Structure
+
+The target architecture should move toward:
+
+YantraAI/
+
+│
+├── app/
+│   │
+│   ├── api/
+│   │   ├── routes/
+│   │   └── dependencies/
+│   │
+│   ├── rag/
+│   │   ├── ingestion/
+│   │   ├── retrieval/
+│   │   ├── reranking/
+│   │   ├── prompting/
+│   │   └── memory/
+│   │
+│   ├── models/
+│   │   ├── llm/
+│   │   ├── embeddings/
+│   │   └── vision/
+│   │
+│   ├── agent/
+│   │   ├── graph/
+│   │   ├── nodes/
+│   │   └── router/
+│   │
+│   ├── tools/
+│   │   ├── python/
+│   │   ├── excel/
+│   │   ├── files/
+│   │   └── documents/
+│   │
+│   └── core/
+│       ├── config/
+│       ├── logging/
+│       └── security/
+│
+├── documents/
+├── chroma_db/
+├── generated/
+│
+├── tests/
+│
+├── README.md
+├── workflow.md
+└── requirements.txt
+
+The structure should be introduced gradually rather than rewriting the entire project at once.
+
+21. FastAPI Backend
 
 Status:
 
-```text
-MOSTLY DONE
-```
+⬜ Not implemented
 
-Tasks:
+The current terminal-based application will eventually be converted into a FastAPI backend.
 
-* PDF ingestion
-* Text extraction
-* Chunking
-* Embeddings
-* ChromaDB
-* Retrieval
-* RAG prompting
-* Conversation memory
-* Source metadata
+Target architecture:
 
----
+Frontend
+    │
+    │ HTTP Request
+    ▼
+FastAPI
+    │
+    ▼
+Agent / RAG
+    │
+    ▼
+Response
 
-## Phase 2 — Improve RAG
+Potential endpoints:
 
-Tasks:
-
-* Better chunking
-* Better metadata
-* Query rewriting
-* Hybrid retrieval if required
-* Reranking
-* Better relevance threshold
-* Better section handling
-* Retrieval evaluation
-
-Goal:
-
-```text
-Question
-   ↓
-Correct chunk
-   ↓
-Correct answer
-```
-
----
-
-# 14. PHASE 3 — FASTAPI
-
-Convert the current terminal application into an API.
-
-Example endpoints:
-
-```text
 POST /chat
+
 POST /upload
+
 POST /search
+
 POST /ingest
-GET  /documents
-GET  /health
-```
+
+GET /documents
+
+GET /health
+
+FastAPI should become the central interface between the frontend and backend services.
+
+22. LangGraph Agent Architecture
+
+Status:
+
+⬜ Not implemented
+
+LangGraph will eventually become the workflow/orchestration layer.
+
+Target:
+
+START
+  │
+  ▼
+Query Analyzer
+  │
+  ▼
+Router
+  │
+  ├──────────► RAG
+  │
+  ├──────────► General LLM
+  │
+  ├──────────► Vision
+  │
+  └──────────► Tools
+                  │
+                  ▼
+          Response Generator
+                  │
+                  ▼
+                 END
+
+The purpose of LangGraph is to control the workflow instead of placing all decision-making logic inside one large Python file.
+
+23. Agent Routing
+
+Status:
+
+⬜ Future implementation
+
+YantraAI should eventually determine which capability is required for a user request.
 
 Example:
 
-```text
-Frontend
-   │
-   │ POST /chat
-   ▼
-FastAPI
-   │
-   ▼
-RAG / Agent
-   │
-   ▼
-Response
-```
-
----
-
-# 15. PHASE 4 — LANGGRAPH
-
-Create agent nodes such as:
-
-```text
-START
-  ↓
+User Query
+    │
+    ▼
 Query Analyzer
-  ↓
-Router
-  ├── RAG
-  ├── LLM
-  ├── Vision
-  └── Tools
+    │
+    ▼
+Routing Decision
+
+Possible routes:
+
+Document Question
         ↓
-Response Generator
+       RAG
+
+General Question
         ↓
-      END
-```
+   General LLM
 
-LangGraph should control the workflow rather than putting all logic into one large Python file.
+Image Question
+        ↓
+   Vision Model
 
----
+Data Analysis
+        ↓
+   Python Tool
 
-# 16. PHASE 5 — TOOL ENGINE
+Excel Request
+        ↓
+   Excel Tool
 
-Tools will allow the agent to perform actions instead of only answering questions.
+File Operation
+        ↓
+    File Tool
+24. Model Router
+
+Status:
+
+⬜ Future implementation
+
+YantraAI should not use one model for every task.
+
+The future model router will select an appropriate local model based on the task.
+
+Example:
+
+General Reasoning
+        ↓
+General LLM
+
+Document Question
+        ↓
+RAG + LLM
+
+Image Understanding
+        ↓
+Vision Model
+
+Coding / Python
+        ↓
+Coding Model
+
+Complex Reasoning
+        ↓
+Stronger Local Model
+
+Model selection will depend on:
+
+Accuracy
+Memory Requirement
+Inference Speed
+Latency
+Hardware Availability
+
+Priority:
+
+Accuracy
+   >
+Memory Requirement
+   >
+Speed
+
+Lightweight models should be preferred when they provide acceptable quality.
+
+25. Local Model Strategy
+
+Status:
+
+🟡 Current Qwen implementation completed
+⬜ Multi-model architecture pending
+
+The current generation model is:
+
+qwen3:1.7b
+
+The current embedding model is:
+
+nomic-embed-text
+
+Both are being used locally.
+
+Future models should be added only after benchmarking.
+
+Do not install large models unnecessarily.
+
+Model selection should be based on actual hardware performance rather than model size alone.
+
+26. Tool Engine
+
+Status:
+
+⬜ Future implementation
+
+The future tool engine will allow YantraAI to perform actions instead of only generating text.
 
 Initial tools:
 
-```text
 File Tool
 Python Tool
 Excel Tool
 Document Tool
-```
 
-Examples:
+Example:
 
-```text
 "Analyze this CSV"
         ↓
 Python Tool
-
 "Create an Excel report"
         ↓
 Excel Tool
-
 "Summarize this PDF"
         ↓
 RAG
-
 "Create a DOCX report"
         ↓
 Document Tool
-```
+27. Python / Data Analysis Tool
 
----
+Status:
 
-# 17. PHASE 6 — MULTIMODAL AI
+⬜ Future implementation
 
-Add support for:
+The Python tool will allow the agent to perform controlled data-analysis tasks.
 
-```text
+Potential capabilities:
+
+CSV analysis
+Data cleaning
+EDA
+Statistics
+Calculations
+Charts
+Data transformations
+
+Example:
+
+User
+  ↓
+"Analyze this CSV"
+  ↓
+LangGraph
+  ↓
+Python Tool
+  ↓
+Analysis
+  ↓
+Response
+
+Execution should be isolated and controlled for security.
+
+28. Excel Tool
+
+Status:
+
+⬜ Future implementation
+
+The Excel tool will allow YantraAI to work with spreadsheet files.
+
+Potential capabilities:
+
+Read XLSX
+Create XLSX
+Modify XLSX
+Data analysis
+Pivot-style summaries
+Charts
+Formatting
+Reports
+
+Example:
+
+User
+  ↓
+"Create an Excel summary from this data"
+  ↓
+Agent
+  ↓
+Python / Excel Tool
+  ↓
+XLSX
+29. File & Document Tools
+
+Status:
+
+⬜ Future implementation
+
+Potential document operations:
+
+Read files
+Create files
+Modify files
+Summarize documents
+Generate reports
+Convert structured results into documents
+
+Future output formats:
+
+DOCX
+PDF
+XLSX
+CSV
+PPTX
+30. Multimodal AI
+
+Status:
+
+⬜ Future implementation
+
+YantraAI should eventually support:
+
 Images
 PDFs
 Tables
 Charts
-Scanned documents
-```
+Scanned Documents
 
-Vision models can be used for image understanding and OCR-like workflows where required.
+A vision model can be introduced for:
 
----
+Image Understanding
+Document Image Analysis
+Chart Understanding
+Scanned Document Processing
+OCR-like Workflows
 
-# 18. PHASE 7 — FRONTEND
+The vision pipeline will remain separate from the normal text-only RAG pipeline where appropriate.
 
-Frontend should eventually provide:
+31. Frontend
 
-```text
-Chat interface
-File upload
-Document list
-Source citations
-Tool status
-Generated files
-Model information
-Conversation history
-```
+Status:
 
-Possible stack:
+⬜ Future implementation
 
-```text
+Possible frontend stack:
+
 React / Next.js
-```
 
----
+The frontend should eventually provide:
 
-# 19. FINAL USER EXPERIENCE
+Chat Interface
 
-The user should not need to know which model or tool is being used.
+File Upload
 
-Example:
+Document List
 
-```text
+Source Citations
+
+Conversation History
+
+Tool Status
+
+Generated Files
+
+Model Information
+
+Loading / Processing Status
+
+The user should not need to understand the internal model architecture.
+
+32. Final User Experience
+
+Example 1:
+
 User:
-Analyze this PDF and create an Excel summary.
-```
 
-System:
-
-```text
-Frontend
-   ↓
-FastAPI
-   ↓
-LangGraph
-   ↓
-Document/RAG Agent
-   ↓
-Python/Excel Tool
-   ↓
-Generate XLSX
-   ↓
-Return file
-```
-
-Another example:
-
-```text
-User:
 What does this document say about normalization?
-```
 
-Flow:
+Target flow:
 
-```text
 Frontend
    ↓
 FastAPI
@@ -797,219 +1117,72 @@ FastAPI
 LangGraph
    ↓
 RAG
+   ↓
+Query Processing
    ↓
 ChromaDB
    ↓
 Reranker
    ↓
-LLM
+Relevant Context
+   ↓
+Local LLM
    ↓
 Answer + Sources
-```
-
----
-
-# 20. FINAL OUTPUT TYPES
-
-The system should eventually support:
-
-```text
-Question Answer
-      ↓
-Chat Response
-
-Report Request
-      ↓
-DOCX / PDF
-
-Data Analysis
-      ↓
-XLSX / CSV
-
-Presentation Request
-      ↓
-PPTX
-
-Image Understanding
-      ↓
-Vision Response
-```
-
----
-
-# 21. SECURITY PRINCIPLE
-
-YantraAI is intended to be on-premise/local-first.
-
-Sensitive documents should not be unnecessarily sent to external cloud AI services.
-
-Preferred architecture:
-
-```text
-User Data
    ↓
-Local / Controlled Infrastructure
+User
+
+Example 2:
+
+User:
+
+Analyze this CSV and create an Excel summary.
+
+Target flow:
+
+Frontend
    ↓
-Local Models
+FastAPI
    ↓
-Local Vector Database
+LangGraph
+   ↓
+Query Analyzer
+   ↓
+Tool Router
+   ↓
+Python / Excel Tool
+   ↓
+Generate XLSX
+   ↓
+Return File
+   ↓
+User
+
+Example 3:
+
+User:
+
+Explain this image.
+
+Target flow:
+
+Frontend
+   ↓
+FastAPI
+   ↓
+LangGraph
+   ↓
+Vision Route
+   ↓
+Vision Model
    ↓
 Response
-```
+   ↓
+User
+33. Final Architecture
 
-Security features to add later:
+The final YantraAI architecture should become:
 
-```text
-Authentication
-Authorization
-API keys / tokens
-Encrypted communication
-Access control
-Audit logs
-Document permissions
-```
-
----
-
-# 22. DEVELOPMENT RULES
-
-### Rule 1
-
-Do not duplicate existing functionality.
-
-Before creating a new component, check the current code.
-
-### Rule 2
-
-Keep components modular.
-
-Prefer:
-
-```text
-rag/
-models/
-tools/
-api/
-agent/
-frontend/
-```
-
-instead of one huge Python file.
-
-### Rule 3
-
-Every service should have a clear input/output contract.
-
-### Rule 4
-
-Test every major component independently before integration.
-
-### Rule 5
-
-Do not change the embedding model randomly.
-
-If the embedding model changes, the ChromaDB collection must be recreated/re-embedded because embedding dimensions must match.
-
-Current configuration:
-
-```text
-nomic-embed-text
-768 dimensions
-```
-
-### Rule 6
-
-Use Git branches for separate features.
-
-Example:
-
-```text
-main
- ├── rag-improvement
- ├── fastapi
- ├── langgraph
- ├── frontend
- └── tools
-```
-
----
-
-# 23. IMMEDIATE PRIORITY
-
-The goal right now is NOT to build every feature.
-
-First create a stable working prototype.
-
-Priority order:
-
-```text
-1. Fix and stabilize RAG
-        ↓
-2. Improve retrieval + reranking
-        ↓
-3. Create FastAPI backend
-        ↓
-4. Add LangGraph
-        ↓
-5. Connect local model services
-        ↓
-6. Add tools
-        ↓
-7. Build frontend
-        ↓
-8. Add file generation
-        ↓
-9. Final integration
-        ↓
-10. Demo + testing
-```
-
----
-
-# 24. CURRENT POSITION
-
-```text
-PDF Ingestion          ✅
-Text Extraction        ✅
-Chunking               ✅
-Embeddings             ✅
-ChromaDB               ✅
-Semantic Search        ✅
-Section Detection      ✅
-RAG Prompt             ✅
-Qwen LLM               ✅
-Conversation Memory    ✅
-Source Metadata        ✅
-
-Reranking              🟡
-Better Retrieval       🟡
-FastAPI                ⬜
-LangGraph              ⬜
-Model Router           ⬜
-Remote Model APIs      ⬜
-Tool Engine            ⬜
-Vision                 ⬜
-Frontend               ⬜
-DOCX/XLSX/PPTX         ⬜
-Authentication         ⬜
-Final Integration      ⬜
-```
-
-Legend:
-
-```text
-✅ Completed
-🟡 Needs improvement
-⬜ Not implemented yet
-```
-
----
-
-# 25. FINAL TARGET
-
-The final YantraAI should work like this:
-
-```text
                          USER
                            │
                            ▼
@@ -1022,31 +1195,620 @@ The final YantraAI should work like this:
                       LANGGRAPH
                            │
               ┌────────────┼────────────┐
+              │            │            │
               ▼            ▼            ▼
-             RAG        MODEL ROUTER   TOOLS
+             RAG      MODEL ROUTER    TOOLS
               │            │            │
-           ChromaDB      Local LLMs   Python
-           Reranker      Vision        Excel
-           Documents     Models        Files
-              │            │            │
-              └────────────┼────────────┘
+              │            │            ├── Python
+              │            │            ├── Excel
+              │            │            ├── Files
+              │            │            └── Documents
+              │            │
+              │            ├── Local LLM
+              │            └── Vision Model
+              │
+              ├── ChromaDB
+              ├── Reranker
+              ├── Documents
+              └── Conversation Memory
+                           │
                            ▼
-                    RESPONSE GENERATOR
+                  RESPONSE GENERATOR
                            │
                            ▼
                          USER
-```
+34. Local / Distributed Architecture
 
-The main objective is:
+YantraAI is intended to remain local-first.
 
-> **Build a modular, local-first, agentic AI system where the user interacts with one interface while YantraAI automatically decides whether to use RAG, an LLM, a vision model, or a tool.**
+The architecture should support running different services on different machines when required.
 
----
+Conceptually:
 
-# 26. ONE-LINE PROJECT STATUS
+                Secure Network
+                     │
+       ┌─────────────┼─────────────┐
+       │             │             │
+       ▼             ▼             ▼
+   RAG Service    LLM Service   Vision Service
+       │             │             │
+       └─────────────┼─────────────┘
+                     │
+                     ▼
+                 Main API
 
-```text
-YantraAI currently has a functional local RAG foundation.
-The next major step is converting this foundation into a
-FastAPI + LangGraph based multi-model agent architecture.
-```
+Machines do not need to be physically connected to the same LAN in the final architecture.
+
+Communication should happen through authenticated APIs over a secure network.
+
+For development/testing, secure tunneling or VPN-based connectivity may be used.
+
+The exact distributed architecture will be finalized after the local prototype is stable.
+
+35. Hardware Benchmarking Strategy
+
+Before distributing models across machines, benchmark actual hardware performance.
+
+Important measurements:
+
+RAM Usage
+
+Model Size
+
+Inference Speed
+
+CPU Utilization
+
+GPU Utilization
+
+Response Latency
+
+Concurrent Requests
+
+System Stability
+
+Model deployment should be based on benchmarking rather than simply assigning the largest available model to the most powerful machine.
+
+Large models should not be downloaded on every machine unnecessarily.
+
+36. Security Architecture
+
+YantraAI follows a local-first security principle.
+
+Preferred flow:
+
+User Data
+    ↓
+Controlled Infrastructure
+    ↓
+Local Processing
+    ↓
+Local Models
+    ↓
+Local Vector Database
+    ↓
+Response
+
+Sensitive documents should not unnecessarily leave the controlled environment.
+
+Future security features:
+
+Authentication
+
+Authorization
+
+API Keys / Tokens
+
+Encrypted Communication
+
+Access Control
+
+Audit Logs
+
+Document Permissions
+
+Service Authentication
+
+Security will become increasingly important once multiple services communicate through APIs.
+
+37. Development Phases
+Phase 1 — RAG Foundation
+
+Status:
+
+✅ Mostly Completed
+
+Completed:
+
+PDF ingestion
+Text extraction
+Page-wise processing
+Section detection
+Chunking
+Embeddings
+ChromaDB
+Semantic search
+Distance filtering
+RAG prompting
+Qwen generation
+Conversation memory
+Source metadata
+Basic hallucination control
+Phase 2 — RAG Improvement
+
+Status:
+
+🟡 Current Priority
+
+Tasks:
+
+Better chunking
+Better section detection
+Query rewriting
+Conversation-aware retrieval
+Reranking integration
+Better relevance threshold
+Improved metadata
+Hybrid retrieval if required
+Retrieval evaluation
+Answer grounding evaluation
+
+Goal:
+
+Question
+   ↓
+Correct Retrieval
+   ↓
+Correct Context
+   ↓
+Correct Answer
+Phase 3 — FastAPI Backend
+
+Status:
+
+⬜ Pending
+
+Tasks:
+
+Create FastAPI application
+Create /chat endpoint
+Create /upload endpoint
+Create /search endpoint
+Create /ingest endpoint
+Create /documents endpoint
+Create /health endpoint
+Connect existing RAG pipeline
+
+Goal:
+
+Frontend
+   ↓
+FastAPI
+   ↓
+Existing RAG
+   ↓
+Response
+Phase 4 — LangGraph
+
+Status:
+
+⬜ Pending
+
+Tasks:
+
+Create graph
+Create query analyzer
+Create routing node
+Create RAG node
+Create LLM node
+Create tool nodes
+Create response generation node
+Integrate conversation memory
+
+Goal:
+
+User Query
+    ↓
+Analyzer
+    ↓
+Router
+    ↓
+Required Capability
+    ↓
+Response
+Phase 5 — Model Routing
+
+Status:
+
+⬜ Pending
+
+Tasks:
+
+Benchmark available models
+Select general LLM
+Select coding model
+Select vision model
+Create model service interface
+Create routing logic
+Implement fallback logic
+Phase 6 — Remote Local Model Services
+
+Status:
+
+⬜ Pending
+
+Tasks:
+
+Expose selected model services through APIs
+Implement service authentication
+Implement secure communication
+Add health checks
+Add timeout handling
+Add fallback handling
+Benchmark network latency
+Phase 7 — Tool Engine
+
+Status:
+
+⬜ Pending
+
+Tasks:
+
+File Tool
+Python Tool
+Excel Tool
+Document Tool
+Tool validation
+Tool execution control
+Tool result handling
+Phase 8 — Multimodal AI
+
+Status:
+
+⬜ Pending
+
+Tasks:
+
+Vision model
+Image understanding
+Scanned document processing
+Chart understanding
+Table understanding
+Multimodal document workflows
+Phase 9 — Frontend
+
+Status:
+
+⬜ Pending
+
+Tasks:
+
+Chat UI
+File upload
+Document management
+Conversation history
+Source display
+Tool status
+Model status
+Generated file display
+Phase 10 — File Generation
+
+Status:
+
+⬜ Pending
+
+Target outputs:
+
+DOCX
+PDF
+XLSX
+CSV
+PPTX
+Phase 11 — Security & Production Hardening
+
+Status:
+
+⬜ Pending
+
+Tasks:
+
+Authentication
+Authorization
+API security
+Encrypted communication
+Access control
+Audit logging
+Document permissions
+Service monitoring
+Error handling
+Phase 12 — Final Integration & Demo
+
+Status:
+
+⬜ Pending
+
+Tasks:
+
+Integrate all services
+End-to-end testing
+Performance testing
+RAG evaluation
+Agent evaluation
+Tool testing
+Security testing
+UI testing
+Error handling
+Demo preparation
+Documentation
+38. Immediate Development Priority
+
+The current priority should remain:
+
+1. Stabilize Current RAG
+          ↓
+2. Improve Retrieval
+          ↓
+3. Integrate Reranker
+          ↓
+4. Add Query Rewriting
+          ↓
+5. Evaluate Retrieval
+          ↓
+6. Create FastAPI Backend
+          ↓
+7. Add LangGraph
+          ↓
+8. Add Model Routing
+          ↓
+9. Add Tool Engine
+          ↓
+10. Add Multimodal Support
+          ↓
+11. Build Frontend
+          ↓
+12. Add File Generation
+          ↓
+13. Security Hardening
+          ↓
+14. Final Integration
+          ↓
+15. Demo + Testing
+
+The immediate goal is not to implement every feature simultaneously.
+
+The priority is to build a stable foundation and add each layer incrementally.
+
+39. Development Rules
+Rule 1 — Do Not Duplicate Existing Functionality
+
+Before creating a new component, inspect the current implementation.
+
+Reuse existing functionality wherever possible.
+
+Rule 2 — Keep Components Modular
+
+Avoid one extremely large Python file.
+
+Target separation:
+
+rag/
+models/
+tools/
+api/
+agent/
+frontend/
+tests/
+Rule 3 — Clear Input / Output Contracts
+
+Every service should have a clearly defined input and output.
+
+Example:
+
+Retriever
+
+Input:
+Query
+
+Output:
+Retrieved Chunks + Metadata
+Reranker
+
+Input:
+Query + Candidates
+
+Output:
+Ranked Candidates
+LLM
+
+Input:
+Prompt + Context
+
+Output:
+Generated Response
+Rule 4 — Test Components Independently
+
+Every major component should be tested before integration.
+
+Examples:
+
+Embedding Test
+Retrieval Test
+Reranker Test
+LLM Test
+Memory Test
+API Test
+Tool Test
+Rule 5 — Protect the Embedding Configuration
+
+Current embedding model:
+
+nomic-embed-text
+
+Current dimension:
+
+768
+
+Do not change the embedding model randomly.
+
+If the embedding model changes, existing vectors should be re-embedded and the relevant ChromaDB collection should be recreated or migrated appropriately.
+
+Rule 6 — Preserve Conversation Memory
+
+Conversation memory is an important requirement of YantraAI.
+
+Future RAG and agent architecture must continue supporting context-aware follow-up questions.
+
+Rule 7 — Benchmark Before Model Deployment
+
+Do not select models only based on parameter count.
+
+Benchmark:
+
+Accuracy
+RAM
+Latency
+Inference Speed
+CPU/GPU Usage
+Concurrent Requests
+Rule 8 — Build Incrementally
+
+Do not rewrite the entire project when adding a new feature.
+
+Preferred approach:
+
+Existing Working System
+        ↓
+Small Improvement
+        ↓
+Test
+        ↓
+Integrate
+        ↓
+Next Improvement
+40. Current Position
+PDF Ingestion             ✅
+Text Extraction           ✅
+Page-wise Processing      ✅
+Chunking                  ✅
+Embeddings                ✅
+ChromaDB                  ✅
+Semantic Search            ✅
+Distance Filtering         ✅
+Section Detection          ✅
+RAG Prompt                 ✅
+Qwen LLM                   ✅
+Conversation Memory        ✅
+Follow-up Questions        ✅
+Source Metadata            ✅
+Basic Hallucination Control ✅
+
+Better Chunking            🟡
+Better Retrieval           🟡
+Better Section Detection   🟡
+Reranking Integration      🟡
+Query Rewriting            ⬜
+Hybrid Retrieval           ⬜
+Retrieval Evaluation       ⬜
+
+FastAPI                    ⬜
+LangGraph                  ⬜
+Model Router               ⬜
+Remote Model APIs          ⬜
+Tool Engine                ⬜
+Python Tool                ⬜
+Excel Tool                 ⬜
+File Tool                  ⬜
+Document Tool              ⬜
+Vision                     ⬜
+Frontend                   ⬜
+DOCX/PDF/XLSX/PPTX         ⬜
+Authentication             ⬜
+Authorization              ⬜
+Audit Logging              ⬜
+Final Integration          ⬜
+
+Legend:
+
+✅ Completed
+🟡 Implemented / Needs Improvement
+⬜ Not Implemented Yet
+41. Final Target Workflow
+
+The final user workflow should be:
+
+                         USER
+                           │
+                           ▼
+                       FRONTEND
+                           │
+                           ▼
+                        FASTAPI
+                           │
+                           ▼
+                      LANGGRAPH
+                           │
+                           ▼
+                    QUERY ANALYZER
+                           │
+                           ▼
+                         ROUTER
+                           │
+          ┌────────────────┼────────────────┐
+          │                │                │
+          ▼                ▼                ▼
+         RAG          MODEL ROUTER        TOOLS
+          │                │                │
+          │                │          ┌─────┼─────┐
+          │                │          │     │     │
+          ▼                ▼          ▼     ▼     ▼
+      ChromaDB         Local LLM    Python Excel Files
+          │             Vision              │
+      Reranker          Models              │
+          │                                 │
+          └────────────────┬────────────────┘
+                           │
+                           ▼
+                  RESPONSE GENERATOR
+                           │
+                           ▼
+                         USER
+42. Final Objective
+
+YantraAI should eventually behave like a single intelligent AI workbench.
+
+The user should simply provide a request:
+
+Ask a question
+Upload a document
+Analyze data
+Analyze an image
+Create a report
+Create an Excel file
+Generate a presentation
+
+YantraAI should automatically determine:
+
+What does the user need?
+        ↓
+Which information is required?
+        ↓
+Which model should be used?
+        ↓
+Is RAG required?
+        ↓
+Is a tool required?
+        ↓
+Is a vision model required?
+        ↓
+What output should be generated?
+
+The user should not need to manually select the model, RAG pipeline, or tool.
+
+43. One-Line Project Status
+YantraAI currently has a functional local RAG foundation with
+PDF ingestion, embeddings, ChromaDB retrieval, Qwen generation,
+conversation memory, source metadata, and basic grounding.
+
+The immediate next step is to improve retrieval quality and
+reranking, followed by converting the system into a FastAPI +
+LangGraph based modular agent architecture.

@@ -1,30 +1,25 @@
 # ============================================================
-# YantraAI RAG - Conversation Memory
+# YantraAI RAG - Memory
+# Conversation Memory
 # ============================================================
 
-# ============================================================
-# CONVERSATION STORAGE
-# ============================================================
-
-conversation_history = []
+conversation_memory = []
 
 
 # ============================================================
 # ADD USER MESSAGE
 # ============================================================
 
-def add_user_message(
-    message
-):
-    """
-    Store a user message.
-    """
+def add_user_message(message):
 
-    conversation_history.append({
+    if not message:
+        return
+
+    conversation_memory.append({
 
         "role": "user",
 
-        "content": message
+        "content": message.strip()
 
     })
 
@@ -33,48 +28,59 @@ def add_user_message(
 # ADD ASSISTANT MESSAGE
 # ============================================================
 
-def add_assistant_message(
-    message
-):
-    """
-    Store an assistant response.
-    """
+def add_assistant_message(message):
 
-    conversation_history.append({
+    if not message:
+        return
+
+    conversation_memory.append({
 
         "role": "assistant",
 
-        "content": message
+        "content": message.strip()
 
     })
 
 
 # ============================================================
-# GET HISTORY
+# GET CONVERSATION HISTORY
 # ============================================================
 
-def get_history():
-    """
-    Return the complete conversation history.
-    """
+def get_conversation_history():
 
-    return conversation_history
+    if not conversation_memory:
 
+        return ""
 
-# ============================================================
-# GET RECENT HISTORY
-# ============================================================
+    history_parts = []
 
-def get_recent_history(
-    max_messages=6
-):
-    """
-    Return only the most recent messages.
-    """
+    for message in conversation_memory:
 
-    return conversation_history[
-        -max_messages:
-    ]
+        role = message.get(
+            "role",
+            ""
+        )
+
+        content = message.get(
+            "content",
+            ""
+        )
+
+        if role == "user":
+
+            history_parts.append(
+                f"User: {content}"
+            )
+
+        elif role == "assistant":
+
+            history_parts.append(
+                f"Assistant: {content}"
+            )
+
+    return "\n".join(
+        history_parts
+    )
 
 
 # ============================================================
@@ -82,148 +88,14 @@ def get_recent_history(
 # ============================================================
 
 def clear_memory():
-    """
-    Clear the current conversation.
-    """
 
-    conversation_history.clear()
+    conversation_memory.clear()
 
 
 # ============================================================
-# FORMAT HISTORY FOR LLM
+# GET MEMORY
 # ============================================================
 
-def format_history(
-    max_messages=6
-):
-    """
-    Convert conversation history into
-    text that can be provided to the LLM.
-    """
+def get_memory():
 
-    recent_messages = get_recent_history(
-        max_messages
-    )
-
-
-    if not recent_messages:
-
-        return ""
-
-
-    formatted_history = []
-
-
-    for message in recent_messages:
-
-        role = message["role"]
-
-        content = message["content"]
-
-
-        if role == "user":
-
-            formatted_history.append(
-                f"User: {content}"
-            )
-
-        else:
-
-            formatted_history.append(
-                f"YantraAI: {content}"
-            )
-
-
-    return "\n".join(
-        formatted_history
-    )
-
-
-# ============================================================
-# DISPLAY MEMORY
-# ============================================================
-
-def print_memory():
-
-    print(
-        "\n==================================="
-    )
-
-    print(
-        "        CONVERSATION MEMORY"
-    )
-
-    print(
-        "==================================="
-    )
-
-
-    if not conversation_history:
-
-        print(
-            "\nMemory is empty."
-        )
-
-        return
-
-
-    for index, message in enumerate(
-        conversation_history,
-        start=1
-    ):
-
-        print(
-            f"\n{index}. "
-            f"{message['role'].upper()}"
-        )
-
-        print(
-            message["content"]
-        )
-
-
-# ============================================================
-# TEST MEMORY
-# ============================================================
-
-if __name__ == "__main__":
-
-    print(
-        "\nYantraAI Memory Test"
-    )
-
-
-    add_user_message(
-        "What is supervised learning?"
-    )
-
-
-    add_assistant_message(
-        "Supervised learning uses labeled data."
-    )
-
-
-    add_user_message(
-        "Give me some examples."
-    )
-
-
-    print_memory()
-
-
-    print(
-        "\n==================================="
-    )
-
-    print(
-        "FORMATTED HISTORY"
-    )
-
-    print(
-        "==================================="
-    )
-
-
-    print(
-        format_history()
-    )
+    return conversation_memory.copy()

@@ -1,75 +1,33 @@
 # ============================================================
-# YantraAI RAG - Reranker
+# YantraAI RAG - Fast Reranker
+# BGE Cross-Encoder Reranker
 # ============================================================
 
-import re
+from sentence_transformers import CrossEncoder
 
-from ollama import chat
-
-from config import CHAT_MODEL
+from config import TOP_K
 
 
 # ============================================================
-# SCORE ONE DOCUMENT
+# MODEL
 # ============================================================
 
-def score_document(query, document):
-    """
-    Ask the local LLM to judge how relevant
-    a document is to the user's query.
+RERANKER_MODEL = "BAAI/bge-reranker-base"
 
-    Score:
-    0 = Not relevant
-    1 = Slightly relevant
-    2 = Relevant
-    3 = Highly relevant
-    4 = Directly answers the query
-    """
+# Minimum reranker score required.
+# Tune this later using real queries.
 
-    prompt = f"""
-You are a document relevance evaluator.
+RERANK_SCORE_THRESHOLD = 0.01
 
-User Query:
-{query}
 
-Document:
-{document}
+print(
+    f"Loading reranker: {RERANKER_MODEL}"
+)
 
-Rate how relevant the document is to the query.
-
-Return ONLY one integer:
-
-0 = Not relevant
-1 = Slightly relevant
-2 = Relevant
-3 = Highly relevant
-4 = Directly answers the query
-
-Do not explain.
-Return only the number.
-"""
-
-    response = chat(
-        model=CHAT_MODEL,
-        messages=[
-            {
-                "role": "user",
-                "content": prompt
-            }
-        ]
-    )
-
-    answer = response["message"]["content"].strip()
-
-    match = re.search(
-        r"\b[0-4]\b",
-        answer
-    )
-
-    if match:
-        return int(match.group())
-
-    return 0
+reranker = CrossEncoder(
+    RERANKER_MODEL,
+    max_length=512
+)
 
 
 # ============================================================
@@ -81,37 +39,57 @@ def rerank_documents(
     retrieved_documents,
     top_n=3
 ):
-    """
-    Rerank retrieved documents using
-    the local LLM.
-    """
 
     if not retrieved_documents:
 
         return []
 
+    # --------------------------------------------------------
+    # CREATE QUERY-DOCUMENT PAIRS
+    # --------------------------------------------------------
 
-    scored_documents = []
-
+    pairs = []
 
     for result in retrieved_documents:
 
-        score = score_document(
+        pairs.append([
             query,
             result["text"]
-        )
+        ])
+
+    # --------------------------------------------------------
+    # SCORE
+    # --------------------------------------------------------
+
+    scores = reranker.predict(
+        pairs,
+        batch_size=4,
+        show_progress_bar=False
+    )
+
+    # --------------------------------------------------------
+    # ATTACH SCORES
+    # --------------------------------------------------------
+
+    scored_documents = []
+
+    for result, score in zip(
+        retrieved_documents,
+        scores
+    ):
 
         result_copy = result.copy()
 
-        result_copy["rerank_score"] = score
+        result_copy[
+            "rerank_score"
+        ] = float(score)
 
         scored_documents.append(
             result_copy
         )
 
-
     # --------------------------------------------------------
-    # SORT BY RELEVANCE
+    # SORT
     # --------------------------------------------------------
 
     scored_documents.sort(
@@ -119,8 +97,28 @@ def rerank_documents(
         reverse=True
     )
 
+    # --------------------------------------------------------
+    # RELEVANCE FILTER
+    # --------------------------------------------------------
 
-    return scored_documents[:top_n]
+    filtered_documents = [
+
+        result
+
+        for result in scored_documents
+
+        if result["rerank_score"]
+        >= RERANK_SCORE_THRESHOLD
+
+    ]
+
+    # --------------------------------------------------------
+    # TOP N
+    # --------------------------------------------------------
+
+    return filtered_documents[
+        :top_n
+    ]
 
 
 # ============================================================
@@ -139,7 +137,6 @@ def print_reranked_results(
 
         return
 
-
     print(
         "\n==================================="
     )
@@ -152,13 +149,14 @@ def print_reranked_results(
         "==================================="
     )
 
-
     for index, result in enumerate(
         results,
         start=1
     ):
 
-        metadata = result["metadata"]
+        metadata = result[
+            "metadata"
+        ]
 
         print(
             f"\nResult {index}"
@@ -170,32 +168,58 @@ def print_reranked_results(
 
         print(
             "File:",
-            metadata.get("filename")
+            metadata.get(
+                "filename"
+            )
+        )
+
+        print(
+            "Document ID:",
+            metadata.get(
+                "document_id"
+            )
+        )
+
+        print(
+            "Category:",
+            metadata.get(
+                "category"
+            )
         )
 
         print(
             "Page:",
-            metadata.get("page")
+            metadata.get(
+                "page"
+            )
         )
 
         print(
             "Section:",
-            metadata.get("section")
+            metadata.get(
+                "section"
+            )
         )
 
         print(
             "Chunk:",
-            metadata.get("chunk")
+            metadata.get(
+                "chunk"
+            )
         )
 
         print(
             "Chroma Distance:",
-            result["distance"]
+            result[
+                "distance"
+            ]
         )
 
         print(
             "Rerank Score:",
-            result["rerank_score"]
+            result[
+                "rerank_score"
+            ]
         )
 
         print(
@@ -203,56 +227,86 @@ def print_reranked_results(
         )
 
         print(
-            result["text"]
+            result[
+                "text"
+            ]
         )
 
 
 # ============================================================
-# TEST
+# STANDALONE TEST
 # ============================================================
 
 if __name__ == "__main__":
 
-    from retrieval import retrieve_documents
-
-
-    print(
-        "\nYantraAI Reranker Test"
+    from retrieval import (
+        retrieve_documents
     )
 
+    print(
+        "\n==================================="
+    )
+
+    print(
+        "       YantraAI Reranker Test"
+    )
+
+    print(
+        "==================================="
+    )
+
+    user_role = input(
+        "\nEnter user role "
+        "(admin/technical/onsite): "
+    ).strip()
 
     query = input(
         "\nEnter your question: "
-    )
-
+    ).strip()
 
     print(
         "\nRetrieving documents..."
     )
 
+    try:
 
-    retrieved_documents = retrieve_documents(
-        query
-    )
+        retrieved_documents = (
+            retrieve_documents(
+                query,
+                user_role
+            )
+        )
 
+        print(
+            f"\nRetrieved "
+            f"{len(retrieved_documents)} "
+            f"documents."
+        )
 
-    print(
-        f"Retrieved {len(retrieved_documents)} documents."
-    )
+        print(
+            "\nReranking documents..."
+        )
 
+        reranked_documents = (
+            rerank_documents(
+                query,
+                retrieved_documents,
+                top_n=3
+            )
+        )
 
-    print(
-        "\nReranking documents..."
-    )
+        print(
+            f"\nSelected "
+            f"{len(reranked_documents)} "
+            f"documents."
+        )
 
+        print_reranked_results(
+            reranked_documents
+        )
 
-    reranked_documents = rerank_documents(
-        query,
-        retrieved_documents,
-        top_n=3
-    )
+    except ValueError as error:
 
-
-    print_reranked_results(
-        reranked_documents
-    )
+        print(
+            f"\nError: {error}"
+        )

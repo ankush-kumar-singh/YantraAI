@@ -1,0 +1,31 @@
+# ============================================================
+# YantraAI - Models
+# ============================================================
+
+# ---------------- RAG WORKER ----------------
+
+qwen3:8b
+nomic-embed-text
+BAAI/bge-reranker-base
+
+
+# ---------------- VISION WORKER ----------------
+
+Qwen3-VL 2B
+
+
+# ---------------- TOOL / CODING WORKER ----------------
+
+Qwen3 4B
+Coder 3B
+
+
+# ---------------- SANDBOX / QA WORKER ----------------
+
+Qwen2.5-Coder
+
+
+# ---------------- MASTER / REASONING ----------------
+
+# Central reasoning model
+# Add the final selected model here

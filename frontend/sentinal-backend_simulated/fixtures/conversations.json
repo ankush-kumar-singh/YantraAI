@@ -1,0 +1,54 @@
+[
+  {
+    "id": "conv-getting-started",
+    "title": "Plant Inspection & Verification Workflow",
+    "createdAt": 1756540800000,
+    "updatedAt": 1756540800000,
+    "isPinned": true,
+    "mode": "agent",
+    "modelId": "model-reasoning-qwen",
+    "projectId": "proj-autonomous-agent",
+    "status": "completed",
+    "messages": [
+      {
+        "id": "msg-gs-1",
+        "role": "user",
+        "content": "Run a P&ID revision audit on Drawing # PID-4092-B against the ASME Section VIII guidelines.",
+        "timestamp": 1756540800000
+      },
+      {
+        "id": "msg-gs-2",
+        "role": "assistant",
+        "content": "### Sovereign Verification Plan Executed\n\n1. **OCR Text Extraction**: PaddleOCR processed scanned sheet `PID-4092-B.pdf` — extracted 42 valve tags and line pressure ratings.\n2. **Local Vector Search**: Matched 3 relevant clauses in *ASME Section VIII Pressure Vessel Design Guidelines*.\n3. **Sandbox Validation**: Python calculation script checked wall thickness vs design pressure $P = 16.2\\text{ MPa}$.\n4. **Air-Gap Verification**: **0 external API calls made**. All reasoning remained 100% on-premise.\n\n**Result**: All pressure boundary tolerances verified within ASME limits (Safety Margin: $+18.4\\%$).",
+        "timestamp": 1756540801500,
+        "modelId": "model-reasoning-qwen"
+      }
+    ]
+  },
+  {
+    "id": "conv-hydrostatic-calc",
+    "title": "Hydrostatic Calculation Script",
+    "createdAt": 1756540800000,
+    "updatedAt": 1756540800000,
+    "isPinned": false,
+    "mode": "normal",
+    "modelId": "model-coding-qwen",
+    "projectId": "proj-coding",
+    "status": "completed",
+    "messages": [
+      {
+        "id": "msg-hc-1",
+        "role": "user",
+        "content": "Generate a Python script to compute hydrostatic test pressure per ASME Section VIII Div 1 UG-99.",
+        "timestamp": 1756540800000
+      },
+      {
+        "id": "msg-hc-2",
+        "role": "assistant",
+        "content": "Here is the verified computation script:\n\n```python\ndef calculate_hydrostatic_pressure(mawp_psi: float, stress_test_temp: float, stress_design_temp: float) -> float:\n    \"\"\"\n    ASME Sec VIII Div 1 UG-99(b) Hydrostatic Test Formula\n    P_test = 1.3 * MAWP * (S_test / S_design)\n    \"\"\"\n    stress_ratio = stress_test_temp / stress_design_temp\n    return 1.3 * mawp_psi * stress_ratio\n\n# Example calculation\np_test = calculate_hydrostatic_pressure(mawp_psi=350.0, stress_test_temp=20000.0, stress_design_temp=17500.0)\nprint(f\"Required Hydrostatic Test Pressure: {p_test:.2f} psig\")\n```",
+        "timestamp": 1756540801200,
+        "modelId": "model-coding-qwen"
+      }
+    ]
+  }
+]

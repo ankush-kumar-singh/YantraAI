@@ -1,0 +1,72 @@
+[
+  {
+    "id": "ks-1",
+    "name": "Turbine Generator Maintenance Manual v4.2",
+    "category": "Manuals",
+    "syncStatus": "synced",
+    "lastSynced": 1756540800000,
+    "documentCount": 142,
+    "localPath": "/data/knowledge/manuals/tg_v4.2.pdf",
+    "fileSizeMB": 84.5
+  },
+  {
+    "id": "ks-2",
+    "name": "Plant Isolation & Lockout-Tagout (LOTO) Protocol",
+    "category": "SOPs",
+    "syncStatus": "synced",
+    "lastSynced": 1756540800000,
+    "documentCount": 28,
+    "localPath": "/data/knowledge/sops/loto_standard_rev6.docx",
+    "fileSizeMB": 12.3
+  },
+  {
+    "id": "ks-3",
+    "name": "Corporate Cybersecurity & Air-Gap Compliance 2026",
+    "category": "Policies",
+    "syncStatus": "synced",
+    "lastSynced": 1756540800000,
+    "documentCount": 15,
+    "localPath": "/data/knowledge/policies/cyber_airgap_2026.pdf",
+    "fileSizeMB": 4.8
+  },
+  {
+    "id": "ks-4",
+    "name": "ASME Section VIII Pressure Vessel Design Guidelines",
+    "category": "Technical Documents",
+    "syncStatus": "synced",
+    "lastSynced": 1756540800000,
+    "documentCount": 320,
+    "localPath": "/data/knowledge/technical/asme_sec_viii_div1.pdf",
+    "fileSizeMB": 198.0
+  },
+  {
+    "id": "ks-5",
+    "name": "Q3 2025 Root Cause Failure Analysis Repository",
+    "category": "Previous Reports",
+    "syncStatus": "synced",
+    "lastSynced": 1756540800000,
+    "documentCount": 64,
+    "localPath": "/data/knowledge/reports/rcfa_archive_q3.pdf",
+    "fileSizeMB": 45.2
+  },
+  {
+    "id": "ks-6",
+    "name": "OEM Technical Clarifications & Correspondence 2024-2025",
+    "category": "Past Correspondence",
+    "syncStatus": "indexing",
+    "lastSynced": 1756540800000,
+    "documentCount": 89,
+    "localPath": "/data/knowledge/letters/oem_clarifications.mbox",
+    "fileSizeMB": 28.6
+  },
+  {
+    "id": "ks-7",
+    "name": "Site Instrumentation & Loop Calibration Ledger",
+    "category": "Internal Documentation",
+    "syncStatus": "synced",
+    "lastSynced": 1756540800000,
+    "documentCount": 42,
+    "localPath": "/data/knowledge/internal/calibration_ledger.xlsx",
+    "fileSizeMB": 18.1
+  }
+]

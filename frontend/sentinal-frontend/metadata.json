@@ -1,0 +1,6 @@
+{
+  "name": "Sentinel",
+  "description": "Unified multi-provider AI studio with agent execution, tools, workspaces, and full local model support.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}

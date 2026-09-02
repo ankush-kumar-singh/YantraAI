@@ -1,5 +1,5 @@
 # ============================================================
-# YantraAI - Remote RAG Server
+# YantraAI - Distributed RAG Server
 # ============================================================
 
 from fastapi import FastAPI, HTTPException
@@ -10,14 +10,19 @@ from retrieval import retrieve_documents
 from reranker import rerank_documents
 
 
+# ============================================================
+# APP CONFIGURATION
+# ============================================================
+
 app = FastAPI(
-    title="YantraAI RAG Server",
-    version="1.0"
+    title="YantraAI Distributed RAG Server",
+    description="Central RAG service for YantraAI distributed nodes",
+    version="2.0"
 )
 
 
 # ============================================================
-# REQUEST FORMAT
+# REQUEST MODEL
 # ============================================================
 
 class RAGRequest(BaseModel):
@@ -32,7 +37,7 @@ class RAGRequest(BaseModel):
 
 
 # ============================================================
-# BUILD CONTEXT
+# RESPONSE HELPERS
 # ============================================================
 
 def build_context(documents):
@@ -42,54 +47,24 @@ def build_context(documents):
 
     context_parts = []
 
-    for index, result in enumerate(
-        documents,
-        start=1
-    ):
+    for index, result in enumerate(documents, start=1):
 
-        metadata = result.get(
-            "metadata",
-            {}
-        )
+        metadata = result.get("metadata", {})
 
-        filename = metadata.get(
-            "filename",
-            "Unknown"
-        )
+        filename = metadata.get("filename", "Unknown")
+        document_id = metadata.get("document_id", "Unknown")
+        category = metadata.get("category", "Unknown")
+        page = metadata.get("page", "Unknown")
+        section = metadata.get("section", "Unknown")
+        chunk = metadata.get("chunk", "Unknown")
 
-        document_id = metadata.get(
-            "document_id",
-            "Unknown"
-        )
-
-        category = metadata.get(
-            "category",
-            "Unknown"
-        )
-
-        page = metadata.get(
-            "page",
-            "Unknown"
-        )
-
-        section = metadata.get(
-            "section",
-            "Unknown"
-        )
-
-        chunk = metadata.get(
-            "chunk",
-            "Unknown"
-        )
-
-        text = result.get(
-            "text",
-            ""
-        )
+        text = result.get("text", "")
 
         context_parts.append(
             f"""
+============================================================
 SOURCE {index}
+============================================================
 
 File: {filename}
 Document ID: {document_id}
@@ -103,9 +78,55 @@ Content:
 """
         )
 
-    return "\n".join(
-        context_parts
-    )
+    return "\n".join(context_parts)
+
+
+def build_sources(documents):
+
+    sources = []
+
+    for result in documents:
+
+        metadata = result.get("metadata", {})
+
+        sources.append({
+
+            "filename": metadata.get(
+                "filename",
+                "Unknown"
+            ),
+
+            "document_id": metadata.get(
+                "document_id",
+                "Unknown"
+            ),
+
+            "category": metadata.get(
+                "category",
+                "Unknown"
+            ),
+
+            "page": metadata.get(
+                "page",
+                "Unknown"
+            ),
+
+            "section": metadata.get(
+                "section",
+                "Unknown"
+            ),
+
+            "chunk": metadata.get(
+                "chunk",
+                "Unknown"
+            ),
+
+            "rerank_score": result.get(
+                "rerank_score"
+            )
+        })
+
+    return sources
 
 
 # ============================================================
@@ -117,8 +138,9 @@ def health():
 
     return {
         "status": "ok",
-        "service": "YantraAI RAG",
-        "node": "Ankush"
+        "service": "YantraAI Distributed RAG",
+        "node": "Ankush",
+        "version": "2.0"
     }
 
 
@@ -131,153 +153,124 @@ def rag(request: RAGRequest):
 
     try:
 
-        print(
-            f"\nIncoming query: {request.query}"
-        )
-
-        # ----------------------------------------------------
-        # STEP 1: RETRIEVAL
-        # ----------------------------------------------------
+        print()
+        print("============================================================")
+        print("YANTRAAI RAG REQUEST")
+        print("============================================================")
 
         print(
-            "Step 1: Retrieving documents..."
-        )
-
-        retrieved_documents = (
-            retrieve_documents(
-
-                query=request.query,
-
-                user_role=request.user_role,
-
-                document_ids=request.document_ids,
-
-                category=request.category
-            )
+            f"Query       : {request.query}"
         )
 
         print(
-            f"Retrieved: "
-            f"{len(retrieved_documents)} documents"
-        )
-
-
-        # ----------------------------------------------------
-        # STEP 2: RERANK
-        # ----------------------------------------------------
-
-        print(
-            "Step 2: Reranking documents..."
-        )
-
-        reranked_documents = (
-            rerank_documents(
-
-                request.query,
-
-                retrieved_documents,
-
-                top_n=3
-            )
+            f"User Role   : {request.user_role}"
         )
 
         print(
-            f"Selected: "
-            f"{len(reranked_documents)} documents"
+            f"Documents   : {request.document_ids}"
+        )
+
+        print(
+            f"Category    : {request.category}"
         )
 
 
-        # ----------------------------------------------------
-        # STEP 3: BUILD CONTEXT
-        # ----------------------------------------------------
+        # ====================================================
+        # STEP 1 - RETRIEVAL
+        # ====================================================
+
+        print()
+        print("[1/3] Retrieving documents...")
+
+        retrieved_documents = retrieve_documents(
+
+            query=request.query,
+
+            user_role=request.user_role,
+
+            document_ids=request.document_ids,
+
+            category=request.category
+        )
+
+        print(
+            f"Retrieved: {len(retrieved_documents)} documents"
+        )
+
+
+        # ====================================================
+        # STEP 2 - RERANKING
+        # ====================================================
+
+        print()
+        print("[2/3] Reranking documents...")
+
+        reranked_documents = rerank_documents(
+
+            request.query,
+
+            retrieved_documents,
+
+            top_n=3
+        )
+
+        print(
+            f"Selected: {len(reranked_documents)} documents"
+        )
+
+
+        # ====================================================
+        # STEP 3 - BUILD CONTEXT
+        # ====================================================
+
+        print()
+        print("[3/3] Building context...")
 
         context = build_context(
             reranked_documents
         )
 
-
-        # ----------------------------------------------------
-        # STEP 4: SOURCES
-        # ----------------------------------------------------
-
-        sources = []
-
-        for result in reranked_documents:
-
-            metadata = result.get(
-                "metadata",
-                {}
-            )
-
-            sources.append({
-
-                "filename":
-                    metadata.get(
-                        "filename",
-                        "Unknown"
-                    ),
-
-                "document_id":
-                    metadata.get(
-                        "document_id",
-                        "Unknown"
-                    ),
-
-                "category":
-                    metadata.get(
-                        "category",
-                        "Unknown"
-                    ),
-
-                "page":
-                    metadata.get(
-                        "page",
-                        "Unknown"
-                    ),
-
-                "section":
-                    metadata.get(
-                        "section",
-                        "Unknown"
-                    ),
-
-                "chunk":
-                    metadata.get(
-                        "chunk",
-                        "Unknown"
-                    ),
-
-                "rerank_score":
-                    result.get(
-                        "rerank_score"
-                    )
-            })
+        sources = build_sources(
+            reranked_documents
+        )
 
 
-        # ----------------------------------------------------
+        # ====================================================
         # RESPONSE
-        # ----------------------------------------------------
+        # ====================================================
 
-        return {
+        response = {
 
             "success": True,
 
-            "query":
-                request.query,
+            "query": request.query,
 
-            "context":
-                context,
+            "context": context,
 
-            "sources":
-                sources
+            "sources": sources
         }
+
+
+        print()
+        print("RAG processing completed.")
+
+        print(
+            "============================================================"
+        )
+
+
+        return response
 
 
     except Exception as error:
 
-        print(
-            f"RAG Error: {error}"
-        )
+        print()
+        print("============================================================")
+        print("RAG ERROR")
+        print("============================================================")
+
+        print(error)
+
 
         raise HTTPException(
 
@@ -288,12 +281,49 @@ def rag(request: RAGRequest):
 
 
 # ============================================================
-# RUN
+# ROOT ENDPOINT
+# ============================================================
+
+@app.get("/")
+def root():
+
+    return {
+
+        "service": "YantraAI Distributed RAG",
+
+        "status": "running",
+
+        "node": "Ankush",
+
+        "endpoints": {
+
+            "health": "/health",
+
+            "rag": "/rag"
+        }
+    }
+
+
+# ============================================================
+# SERVER
 # ============================================================
 
 if __name__ == "__main__":
 
     import uvicorn
+
+    print()
+    print("============================================================")
+    print("          YANTRAAI DISTRIBUTED RAG SERVER")
+    print("============================================================")
+    print()
+    print("Node       : Ankush")
+    print("Tailscale  : 100.87.210.43")
+    print("Port       : 8000")
+    print()
+    print("RAG Server : http://100.87.210.43:8000")
+    print()
+    print("============================================================")
 
     uvicorn.run(
 

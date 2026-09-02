@@ -4,11 +4,12 @@ from ollama import chat
 
 # ============================================================
 # YantraAI - Remote Generator
+# Amardeep Node - Qwen3 1.7B
 # ============================================================
 
 RAG_SERVER_URL = "http://100.87.210.43:8000"
 
-REASONING_MODEL = "qwen3:8b"
+REASONING_MODEL = "qwen3:1.7b"
 
 REQUEST_TIMEOUT = 120
 
@@ -74,7 +75,10 @@ def generate_answer(query, rag_result):
         []
     )
 
+    # --------------------------------------------------------
     # No relevant information found
+    # --------------------------------------------------------
+
     if not context.strip():
 
         return {
@@ -84,6 +88,10 @@ def generate_answer(query, rag_result):
             ),
             "sources": sources
         }
+
+    # --------------------------------------------------------
+    # Prompt for Qwen3 1.7B
+    # --------------------------------------------------------
 
     prompt = f"""
 You are YantraAI's reasoning model.
@@ -104,7 +112,7 @@ IMPORTANT RULES:
 4. Do NOT invent sources.
 5. You may summarize, explain, compare, and combine information
    from the retrieved context.
-6. Keep the answer clear and relevant to the question.
+6. Keep the answer clear, concise, and relevant to the question.
 7. If the retrieved context does not contain enough information
    to answer the question, say:
 
@@ -123,6 +131,10 @@ RETRIEVED CONTEXT
 FINAL ANSWER
 ============================================================
 """
+
+    # --------------------------------------------------------
+    # Generate answer using Qwen3 1.7B
+    # --------------------------------------------------------
 
     response = chat(
         model=REASONING_MODEL,
@@ -161,7 +173,9 @@ def display_sources(sources):
         start=1
     ):
 
-        print(f"\n[{i}] {source.get('filename', 'Unknown')}")
+        print(
+            f"\n[{i}] {source.get('filename', 'Unknown')}"
+        )
 
         print(
             "Document ID:",
@@ -195,6 +209,22 @@ def display_sources(sources):
             )
         )
 
+        print(
+            "Chunk:",
+            source.get(
+                "chunk",
+                "Unknown"
+            )
+        )
+
+        print(
+            "Rerank Score:",
+            source.get(
+                "rerank_score",
+                "Unknown"
+            )
+        )
+
 
 # ============================================================
 # MAIN
@@ -218,6 +248,10 @@ def main():
     print()
     print("Checking RAG connection...")
 
+    # --------------------------------------------------------
+    # Check Ankush RAG server
+    # --------------------------------------------------------
+
     if not check_rag_server():
 
         print(
@@ -239,7 +273,6 @@ def main():
         "RAG Status: CONNECTED"
     )
 
-
     # ========================================================
     # USER ROLE
     # ========================================================
@@ -248,7 +281,6 @@ def main():
         "\nEnter user role "
         "(admin/technical/onsite): "
     ).strip().lower()
-
 
     if user_role not in {
         "admin",
@@ -262,6 +294,9 @@ def main():
 
         return
 
+    # ========================================================
+    # READY
+    # ========================================================
 
     print()
     print(
@@ -271,7 +306,6 @@ def main():
     print(
         "Type 'exit' or 'quit' to stop."
     )
-
 
     # ========================================================
     # CHAT LOOP
@@ -285,10 +319,16 @@ def main():
             "You: "
         ).strip()
 
+        # ----------------------------------------------------
+        # Empty query
+        # ----------------------------------------------------
 
         if not query:
             continue
 
+        # ----------------------------------------------------
+        # Exit
+        # ----------------------------------------------------
 
         if query.lower() in {
             "exit",
@@ -301,55 +341,48 @@ def main():
 
             break
 
-
         try:
 
-            # ------------------------------------------------
-            # STEP 1
-            # ------------------------------------------------
+            # =================================================
+            # STEP 1 - RAG SEARCH
+            # =================================================
 
             print(
                 "\n[1/3] Searching RAG..."
             )
 
             rag_result = call_rag(
-
                 query=query,
-
                 user_role=user_role
             )
 
-
-            # ------------------------------------------------
-            # STEP 2
-            # ------------------------------------------------
+            # =================================================
+            # STEP 2 - CONTEXT
+            # =================================================
 
             print(
                 "[2/3] Context received."
             )
 
+            # =================================================
+            # STEP 3 - QWEN 1.7B
+            # =================================================
+
             print(
-                "[3/3] Qwen3 8B reasoning..."
+                "[3/3] Qwen3 1.7B reasoning..."
             )
 
-
-            # ------------------------------------------------
-            # STEP 3
-            # ------------------------------------------------
-
             result = generate_answer(
-
                 query=query,
-
                 rag_result=rag_result
             )
 
-
-            # ------------------------------------------------
+            # =================================================
             # FINAL ANSWER
-            # ------------------------------------------------
+            # =================================================
 
             print()
+
             print(
                 "==================================="
             )
@@ -363,23 +396,27 @@ def main():
             )
 
             print()
+
             print(
                 result["answer"]
             )
 
-
-            # ------------------------------------------------
+            # =================================================
             # SOURCES
-            # ------------------------------------------------
+            # =================================================
 
             display_sources(
                 result["sources"]
             )
 
+        # =====================================================
+        # RAG TIMEOUT
+        # =====================================================
 
         except requests.exceptions.Timeout:
 
             print()
+
             print(
                 "RAG request timed out."
             )
@@ -388,10 +425,14 @@ def main():
                 "Check whether Ankush's RAG server is running."
             )
 
+        # =====================================================
+        # RAG CONNECTION ERROR
+        # =====================================================
 
         except requests.exceptions.ConnectionError:
 
             print()
+
             print(
                 "Could not connect to Ankush's RAG server."
             )
@@ -400,10 +441,14 @@ def main():
                 f"RAG Server: {RAG_SERVER_URL}"
             )
 
+        # =====================================================
+        # HTTP ERROR
+        # =====================================================
 
         except requests.exceptions.HTTPError as error:
 
             print()
+
             print(
                 "RAG server returned an error:"
             )
@@ -412,10 +457,14 @@ def main():
                 error
             )
 
+        # =====================================================
+        # OTHER ERROR
+        # =====================================================
 
         except Exception as error:
 
             print()
+
             print(
                 "Error:"
             )

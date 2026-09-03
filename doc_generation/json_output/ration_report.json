@@ -1,0 +1,57 @@
+{
+    "document_name": "ration_report",
+    "document_type": "ration_report",
+    "metadata": {
+        "date": "2023-10-15",
+        "location": "Central Distribution Center",
+        "parameters": "Monthly ration distribution"
+    },
+    "content": {
+        "sections": [
+            {
+                "section_title": "Distribution Summary",
+                "content": "Monthly ration distribution was conducted to ensure food security for all residents. Total quantity distributed: 1200 kg of rice, 300 kg of wheat, and 150 kg of vegetables."
+            },
+            {
+                "section_title": "Detailed Distribution",
+                "content": "The distribution was carried out as follows: Rice - 800 kg to residential blocks A and B; Wheat - 200 kg to block C; Vegetables - 50 kg to block D."
+            }
+        ],
+        "tables": [
+            {
+                "table_title": "Food Distribution Details",
+                "columns": [
+                    "Date",
+                    "Item",
+                    "Quantity (kg)",
+                    "Recipient"
+                ],
+                "rows": [
+                    {
+                        "Date": "2023-10-15",
+                        "Item": "Rice",
+                        "Quantity (kg)": "800",
+                        "Recipient": "Residential Block A"
+                    },
+                    {
+                        "Date": "2023-10-15",
+                        "Item": "Wheat",
+                        "Quantity (kg)": "200",
+                        "Recipient": "Residential Block C"
+                    },
+                    {
+                        "Date": "2023-10-15",
+                        "Item": "Vegetables",
+                        "Quantity (kg)": "50",
+                        "Recipient": "Residential Block D"
+                    }
+                ]
+            }
+        ]
+    },
+    "formatting": {
+        "font_size": "12",
+        "font_family": "Arial",
+        "page_layout": "landscape"
+    }
+}

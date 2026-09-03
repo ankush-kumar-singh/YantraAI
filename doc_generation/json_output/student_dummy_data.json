@@ -1,0 +1,80 @@
+{
+    "document_name": "student_dummy_data",
+    "document_type": "student_report",
+    "metadata": {
+        "title": "Student Dummy Data",
+        "author": "YantraAI",
+        "date": "2023-10-15"
+    },
+    "content": {
+        "sections": [
+            {
+                "section_title": "Student List",
+                "content": [
+                    {
+                        "student_id": 1,
+                        "name": "Ankur Sharma",
+                        "age": 16,
+                        "grade": "10th",
+                        "note": "Excellent student"
+                    },
+                    {
+                        "student_id": 2,
+                        "name": "Priya Gupta",
+                        "age": 15,
+                        "grade": "9th",
+                        "note": "Good student"
+                    },
+                    {
+                        "student_id": 3,
+                        "name": "Rahul Kumar",
+                        "age": 16,
+                        "grade": "10th",
+                        "note": "Average student"
+                    }
+                ]
+            }
+        ],
+        "tables": [
+            {
+                "table_title": "Student Details",
+                "columns": [
+                    "Student ID",
+                    "Name",
+                    "Age",
+                    "Grade",
+                    "Note"
+                ],
+                "rows": [
+                    [
+                        1,
+                        "Ankur Sharma",
+                        "16",
+                        "10th",
+                        "Excellent student"
+                    ],
+                    [
+                        2,
+                        "Priya Gupta",
+                        "15",
+                        "9th",
+                        "Good student"
+                    ],
+                    [
+                        3,
+                        "Rahul Kumar",
+                        "16",
+                        "10th",
+                        "Average student"
+                    ]
+                ]
+            }
+        ],
+        "formatting": {
+            "font": "Arial",
+            "size": "12",
+            "bold": true,
+            "align": "left"
+        }
+    }
+}

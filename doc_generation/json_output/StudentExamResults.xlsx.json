@@ -1,0 +1,49 @@
+{
+    "document_name": "StudentExamResults.xlsx",
+    "document_type": "student_excel",
+    "metadata": {},
+    "content": {
+        "sections": [
+            {
+                "section_title": "Student Details",
+                "content": {
+                    "tables": [
+                        {
+                            "table_title": "Exam Results",
+                            "columns": [
+                                "Student ID",
+                                "Name",
+                                "Subject",
+                                "Marks",
+                                "Grade"
+                            ],
+                            "rows": [
+                                {
+                                    "Student ID": "A101",
+                                    "Name": "John Doe",
+                                    "Subject": "Mathematics",
+                                    "Marks": "85",
+                                    "Grade": "A"
+                                },
+                                {
+                                    "Student ID": "A102",
+                                    "Name": "Jane Smith",
+                                    "Subject": "Science",
+                                    "Marks": "92",
+                                    "Grade": "A"
+                                },
+                                {
+                                    "Student ID": "A103",
+                                    "Name": "Michael Johnson",
+                                    "Subject": "History",
+                                    "Marks": "78",
+                                    "Grade": "B"
+                                }
+                            ]
+                        }
+                    ]
+                }
+            }
+        ]
+    }
+}

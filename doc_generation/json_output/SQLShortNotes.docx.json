@@ -1,0 +1,54 @@
+{
+    "document_name": "SQLShortNotes.docx",
+    "document_type": "student_notes",
+    "metadata": {},
+    "content": {
+        "sections": [
+            {
+                "section_title": "Introduction to SQL",
+                "content": {
+                    "paragraphs": [
+                        "SQL (Structured Query Language) is a standard language for managing and querying relational databases.",
+                        "It allows users to retrieve, manipulate, and manage data stored in databases."
+                    ]
+                }
+            },
+            {
+                "section_title": "Basic Syntax",
+                "content": {
+                    "paragraphs": [
+                        "SQL statements are case-insensitive, but keywords are typically uppercase.",
+                        "A basic SQL statement starts with the SELECT, INSERT, UPDATE, or DELETE command."
+                    ]
+                }
+            },
+            {
+                "section_title": "Data Types",
+                "content": {
+                    "paragraphs": [
+                        "SQL supports various data types: INTEGER, VARCHAR, DATE, BOOLEAN, etc.",
+                        "Values are case-insensitive unless specified otherwise."
+                    ]
+                }
+            },
+            {
+                "section_title": "SELECT Statement",
+                "content": {
+                    "paragraphs": [
+                        "SELECT retrieves data from a database.",
+                        "The basic syntax is: SELECT column1, column2 FROM table;"
+                    ]
+                }
+            },
+            {
+                "section_title": "Applications",
+                "content": {
+                    "paragraphs": [
+                        "SQL is used for data retrieval, insertion, deletion, and modification in relational databases.",
+                        "It is essential for working with databases in applications like CRM, ERP, and web platforms."
+                    ]
+                }
+            }
+        ]
+    }
+}

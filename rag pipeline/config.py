@@ -2,9 +2,12 @@
 # YantraAI RAG - Configuration
 # ============================================================
 
-DOCUMENTS_FOLDER = "./documents"
+from pathlib import Path
 
-CHROMA_PATH = "./chroma_db"
+RAG_DIR = Path(__file__).resolve().parent
+
+DOCUMENTS_FOLDER = RAG_DIR / "documents"
+CHROMA_PATH = RAG_DIR / "chroma_db"
 
 COLLECTION_NAME = "yantra_documents"
 

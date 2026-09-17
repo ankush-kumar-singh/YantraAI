@@ -265,7 +265,7 @@ Error:
 {
     "username" : "username of user",
 
-    "role" : "role of user",
+    "role" : "role of user", // "ADMIN"
 
     "name" : "name of user",
 
@@ -429,21 +429,45 @@ Error:
 
 
 ############################################################################################################################################
-#                                                            Rag Tool (request)                                                            #
+#                View list of all documents in RAG database (response)   [/rag/documents, /admin/rag/documents/{department}]               #
 ############################################################################################################################################
 
 {
-    "username" : "username of the user",
+    "documents" : [
+                        {
+                            "document_name" : "name of the document",
 
-    "user_role" : "role of the user",
+                            "document_id" : "id of the document",
 
-    "query" : "query to search for"
+                            "mime_type" : "mime type of the document"
+                        },
+
+                        {
+                            "document_name" : "name of the document",
+
+                            "document_id" : "id of the document",
+
+                            "mime_type" : "mime type of the document"
+                        }
+    ]
 }
 
 
 
 ############################################################################################################################################
-#                                                            Rag Tool (response)                                                           #
+#                                                    Rag Tool Query (request)   [/query]                                                   #
+############################################################################################################################################
+
+{
+    "user_role" : "role of the user",
+
+    "base64_query" : "base64 encoded query to search for"
+}
+
+
+
+############################################################################################################################################
+#                                                         Rag Tool Query (response)                                                        #
 ############################################################################################################################################
 
 {
@@ -451,13 +475,39 @@ Error:
 
     "chunks" : [
                     {
-                        "data" : "Java is a programming language."
+                        "base64_data" : "base64 encoded chunk data"
                     },
 
                     {
-                        "data" : "Java is a high level programming language."
+                        "base64_data" : "base64 encoded chunk data"
                     }
     ]
+}
+
+
+
+############################################################################################################################################
+#                                                   Rag Tool Upload (request)   [/upload]                                                  #
+############################################################################################################################################
+
+{
+    "user_role" : "department name",
+
+    "document_id" : "document id of the document",
+
+    "base64_content" : "base64 encoded content"
+}
+
+
+
+############################################################################################################################################
+#                                                   Rag Tool Delete (request)   [/delete]                                                  #
+############################################################################################################################################
+
+{
+    "user_role" : "department name",
+
+    "document_id" : "document id of the document"
 }
 
 

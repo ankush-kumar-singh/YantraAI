@@ -22,7 +22,9 @@ import java.net.URI;
 import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
+import java.nio.charset.StandardCharsets;
 import java.time.Duration;
+import java.util.Base64;
 import java.util.List;
 
 @Service
@@ -45,9 +47,23 @@ public class RagTool implements Tool {
             []
             encryption key hash function SHA256 AES256
             """.replaceAll("\\{name}", TOOL_NAME);
+
     private static final String RUNNING_DESCRIPTION = "Using knowledge base....";
+
+    private static final String QUERY_SUB_URL = "/query";
+
+    private static final String UPLOAD_SUB_URL = "/upload";
+
+    private static final String DELETE_SUB_URL = "/delete";
+
     private final HttpClient httpClient = HttpClient.newBuilder().connectTimeout(Duration.ofSeconds(2)).build();
+
     private final ObjectMapper jsonParser = new ObjectMapper();
+
+    private final Base64.Encoder base64Encoder = Base64.getEncoder();
+
+    private final Base64.Decoder base64Decoder = Base64.getDecoder();
+
     @Value("${rag_tool.url}")
     private String ragUrl;
 
@@ -72,7 +88,7 @@ public class RagTool implements Tool {
     }
 
     @Override
-    public ToolResponse performTask(String username, UserRole userRole, String request) throws Exception {
+    public ToolResponse performTask(String username, UserRole userRole, String request) {
         try {
             RequestAndDocumentId requestAndDocumentId = parseRequest(request);
 
@@ -80,12 +96,14 @@ public class RagTool implements Tool {
                 return new ToolResponse("Invalid tool usage format.", List.of(), false);
             }
 
-            RagRequest ragRequest = new RagRequest(username, userRole, requestAndDocumentId.request());
+            String base64Query = base64Encoder.encodeToString(requestAndDocumentId.request().getBytes());
 
-            String ragRequestString = jsonParser.writeValueAsString(ragRequest);
+            RagQueryRequest ragQueryRequest = new RagQueryRequest(userRole, base64Query);
+
+            String ragRequestString = jsonParser.writeValueAsString(ragQueryRequest);
 
             HttpRequest httpRequest = HttpRequest
-                    .newBuilder(URI.create(ragUrl))
+                    .newBuilder(URI.create(ragUrl + QUERY_SUB_URL))
                     .POST(HttpRequest.BodyPublishers.ofString(ragRequestString))
                     .build();
 
@@ -94,15 +112,15 @@ public class RagTool implements Tool {
 
             String ragResponseString = httpResponse.body();
 
-            RagResponse ragResponse = jsonParser.readValue(ragResponseString, RagResponse.class);
+            RagQueryResponse ragQueryResponse = jsonParser.readValue(ragResponseString, RagQueryResponse.class);
 
             StringBuilder result = new StringBuilder("Rag result:\n");
 
-            if (ragResponse.error()) {
+            if (ragQueryResponse.error()) {
                 result.append("Error occurred while retrieving chunks.");
             } else {
                 int chunkNumber = 1;
-                for (Chunk chunk : ragResponse.chunks()) {
+                for (Chunk chunk : ragQueryResponse.chunks()) {
                     result.append(formatChunk(chunk, chunkNumber++));
 
                     result.append("------------------------");
@@ -118,15 +136,78 @@ public class RagTool implements Tool {
         return """
                 Chunk %d:
                 
-                %s""".formatted(chunkNumber, chunk.data);
+                %s""".formatted(chunkNumber, new String(base64Decoder.decode(chunk.base64_data)));
     }
 
-    record RagRequest(String username, UserRole user_role, String query) {
+    public boolean uploadDocument(UserRole userRole, String documentId, String content) {
+        try {
+            String base64Content = base64Encoder.encodeToString(content.getBytes(StandardCharsets.UTF_8));
+
+            RagUploadRequest ragUploadRequest = new RagUploadRequest(userRole.toString(), documentId, base64Content);
+
+            String requestString = jsonParser.writeValueAsString(ragUploadRequest);
+
+            HttpRequest httpRequest = HttpRequest
+                    .newBuilder(
+                            URI.create(ragUrl + UPLOAD_SUB_URL)
+                    )
+                    .POST(
+                            HttpRequest.BodyPublishers.ofString(requestString)
+                    )
+                    .build();
+
+            HttpResponse<Void> httpResponse = httpClient.send(
+                    httpRequest,
+                    HttpResponse.BodyHandlers.discarding()
+            );
+
+            return httpResponse.statusCode() == 200;
+        } catch (Exception _) {
+            return false;
+        }
     }
 
-    record Chunk(String data) {
+    public boolean deleteDocument(UserRole userRole, String documentId) {
+        try {
+            RagDeleteRequest ragDeleteRequest = new RagDeleteRequest(userRole.toString(), documentId);
+
+            String deleteRequestString = jsonParser.writeValueAsString(ragDeleteRequest);
+
+            HttpRequest httpRequest = HttpRequest
+
+                    .newBuilder(URI.create(ragUrl + DELETE_SUB_URL))
+
+                    .POST(
+                            HttpRequest.BodyPublishers.ofString(deleteRequestString)
+                    )
+
+                    .build();
+
+            HttpResponse<Void> httpResponse =
+                    httpClient.send(
+                            httpRequest,
+
+                            HttpResponse.BodyHandlers.discarding()
+                    );
+
+            return httpResponse.statusCode() == 200;
+        } catch (Exception _) {
+            return false;
+        }
     }
 
-    record RagResponse(boolean error, List<Chunk> chunks) {
+    record RagQueryRequest(UserRole user_role, String base64_query) {
+    }
+
+    record Chunk(String base64_data) {
+    }
+
+    record RagQueryResponse(boolean error, List<Chunk> chunks) {
+    }
+
+    record RagUploadRequest(String user_role, String document_id, String base64_content) {
+    }
+
+    record RagDeleteRequest(String user_role, String document_id) {
     }
 }
